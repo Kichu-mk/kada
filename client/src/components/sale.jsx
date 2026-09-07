@@ -1,82 +1,96 @@
 import { useState } from "react";
+import { sellProduct } from "../api/productsApi";
 
-function SellProduct({ product, onClose, onSold }) {
+const Sale = ({ product, onClose, onSuccess }) => {
   const [quantity, setQuantity] = useState(1);
+  const [loading, setLoading] = useState(false);
 
-  const totalPrice = quantity * product.rate;
+  const totalPrice = quantity * product.prize;
 
   const handleSell = async () => {
+    if (!quantity || quantity <= 0) {
+      alert("Please enter a valid quantity");
+      return;
+    }
+
     if (quantity > product.quantity) {
-      alert("Not enough stock available");
+      alert(`Only ${product.quantity} items available`);
       return;
     }
 
     try {
-      const response = await fetch(`/api/products/${product._id}/sell`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          quantity,
-        }),
-      });
+      setLoading(true);
 
-      const data = await response.json();
+      const data = await sellProduct(
+        product._id,
+        quantity
+      );
 
-      if (!response.ok) {
-        alert(data.message);
-        return;
-      }
-
-      onSold(data.product);
+      onSuccess(data.product);
       onClose();
+
     } catch (error) {
       console.error(error);
+
+      alert(
+        error.response?.data?.message ||
+        "Failed to complete sale"
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
 
-        <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-xl font-bold">
+      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+
+        {/* Header */}
+        <div className="mb-6 flex items-center justify-between">
+
+          <h2 className="text-2xl font-bold">
             Sell Product
           </h2>
 
           <button
             onClick={onClose}
-            className="text-2xl text-gray-500 hover:text-black"
+            className="text-2xl text-gray-400 hover:text-gray-700"
           >
             ×
           </button>
+
         </div>
 
-        <div className="mb-5 flex gap-4">
+        {/* Product */}
+        <div className="mb-6 flex gap-4 rounded-xl bg-gray-50 p-4">
+
           <img
             src={product.image}
             alt={product.name}
             className="h-20 w-20 rounded-xl object-cover"
           />
 
-          <div>
-            <h3 className="font-semibold">
+          <div className="flex-1">
+
+            <h3 className="font-semibold text-gray-800">
               {product.name}
             </h3>
 
-            <p className="text-sm text-gray-500">
-              Rate: ₹{product.rate}
+            <p className="mt-1 text-sm text-gray-500">
+              Current Rate: ₹{product.prize}
             </p>
 
             <p className="text-sm text-gray-500">
-              Available: {product.quantity}
+              Available Quantity: {product.quantity}
             </p>
+
           </div>
+
         </div>
 
         {/* Quantity */}
-        <label className="mb-2 block text-sm font-medium">
+        <label className="mb-2 block text-sm font-semibold">
           How much do you want?
         </label>
 
@@ -86,41 +100,59 @@ function SellProduct({ product, onClose, onSold }) {
           max={product.quantity}
           value={quantity}
           onChange={(e) => setQuantity(Number(e.target.value))}
-          className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-blue-500"
+          className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
         />
 
         {/* Total */}
         <div className="mt-5 rounded-xl bg-gray-100 p-4">
-          <div className="flex justify-between text-sm">
+
+          <div className="flex justify-between text-sm text-gray-600">
             <span>Rate</span>
-            <span>₹{product.rate}</span>
+            <span>₹{product.prize}</span>
           </div>
 
-          <div className="mt-2 flex justify-between text-sm">
+          <div className="mt-2 flex justify-between text-sm text-gray-600">
             <span>Quantity</span>
-            <span>{quantity}</span>
+            <span>{quantity || 0}</span>
           </div>
 
-          <div className="mt-3 flex justify-between border-t pt-3 text-lg font-bold">
-            <span>Total</span>
-            <span>₹{totalPrice.toLocaleString()}</span>
+          <div className="mt-3 flex justify-between border-t border-gray-300 pt-3 text-lg font-bold">
+            <span>Total Price</span>
+
+            <span className="text-blue-600">
+              ₹{totalPrice.toLocaleString()}
+            </span>
           </div>
+
         </div>
 
-        <button
-          onClick={handleSell}
-          disabled={
-            quantity < 1 ||
-            quantity > product.quantity
-          }
-          className="mt-5 w-full rounded-xl bg-blue-600 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
-        >
-          Confirm Sale
-        </button>
+        {/* Buttons */}
+        <div className="mt-6 flex gap-3">
+
+          <button
+            onClick={onClose}
+            className="flex-1 rounded-xl border border-gray-300 py-3 font-semibold text-gray-700 transition hover:bg-gray-100"
+          >
+            Cancel
+          </button>
+
+          <button
+            onClick={handleSell}
+            disabled={
+              loading ||
+              quantity <= 0 ||
+              quantity > product.quantity
+            }
+            className="flex-1 rounded-xl bg-blue-600 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+          >
+            {loading ? "Processing..." : "Confirm Sale"}
+          </button>
+
+        </div>
 
       </div>
     </div>
   );
-}
+};
 
-export default SellProduct;
+export default Sale;

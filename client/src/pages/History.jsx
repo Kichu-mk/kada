@@ -44,7 +44,7 @@ const History = () => {
                                     <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
                                 </span>
 
-                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                <div className="bg-slate-200 p-4 rounded-xl border border-slate-100">
                                     <div className="flex justify-between items-start mb-2">
                                         <h3 className="font-bold text-slate-800">
                                             {item.product ? item.product.name : 'Unknown Product'} - {item.action}

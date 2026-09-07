@@ -28,3 +28,10 @@ export const deleteProduct = async (productId) => {
   const { data } = await axiosInstance.delete(`/api/products/${productId}`);
   return data;
 };
+
+export const sellProduct = async (productId, quantity) => {
+  const { data } = await axiosInstance.patch(`/api/products/${productId}/sell`,{ quantity }
+  );
+
+  return data;
+};
