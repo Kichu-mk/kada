@@ -165,11 +165,11 @@ const ProductDetail = () => {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="relative space-y-6 flex items-center flex-col p-6 md:p-12 rounded-2xl min-h-1/2 overflow-hidden"
+      className="relative space-y-6 flex items-center flex-col p-6 md:p-12 rounded-2xl min-h-screen overflow-hidden"
     >
       {product?.image && (
         <div
-          className="absolute inset-0 -z-10 bg-cover bg-center scale-110 blur-2xl opacity-40 pointer-events-none"
+          className="absolute inset-0  bg-cover bg-center scale-110 blur-xl opacity-60 pointer-events-none"
           style={{ backgroundImage: `url(${product.image})` }}
         />
       )}
@@ -182,7 +182,7 @@ const ProductDetail = () => {
         <IoChevronBack className="h-7 w-fit hover:h-8 hover:bg-blue-300 rounded p-0.5" />
       </Link>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden relative z-10">
         <div className="grid md:grid-cols-2 gap-0">
           <div className="bg-slate-200 min-h-75 flex items-center justify-center p-2 border border-slate-300 rounded-2xl shadow-sm ">
             {product.image ? (
@@ -198,32 +198,34 @@ const ProductDetail = () => {
 
           <div className="p-8 space-y-5 bg-white border border-slate-300 rounded-2xl">
             <div className="">
-              <span className="inline-block bg-slate-200 px-2 py-1 rounded-full text-xs font-medium text-slate-600 transition-transform duration-300 hover:scale-110">
+              <div className="flex items-center justify-between space-x-4">
+                <span className="inline-block bg-slate-200 px-2 py-1 rounded-full text-xs font-medium text-slate-600 transition-transform duration-300 hover:scale-110">
                 {product.type || "General"}
-              </span>
-              
+                </span>
+                <div className="flex space-x-2 transition-opacity">
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleOpenModal(product);
+                    }}
+                    className="p-2 bg-white text-slate-600 hover:text-blue-600 rounded-full shadow border border-slate-100 transition-colors"
+                  >
+                    <Edit2 size={20} />
+                  </button>
+                  <button
+                    onClick={(e) => handleDelete(e, product._id)}
+                    className="p-2 bg-white text-slate-600 hover:text-red-600 rounded-full shadow border border-slate-100 transition-colors"
+                  >
+                    <Trash2 size={20} />
+                  </button>
+                </div>
+              </div>
               <h1 className="mt-3 bg-linear-to-r from-blue-500 via-indigo-600 to-purple-500 bg-clip-text text-3xl font-bold text-transparent">
                 {product.name}
               </h1>
             </div>
-            <div className="flex space-x-2 transition-opacity">
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleOpenModal(product);
-                  }}
-                  className="p-2 bg-white text-slate-600 hover:text-blue-600 rounded-full shadow border border-slate-100 transition-colors"
-                >
-                  <Edit2 size={20} />
-                </button>
-                <button
-                  onClick={(e) => handleDelete(e, product._id)}
-                  className="p-2 bg-white text-slate-600 hover:text-red-600 rounded-full shadow border border-slate-100 transition-colors"
-                >
-                  <Trash2 size={20} />
-                </button>
-              </div>
+            
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div className="bg-slate-200 p-4 rounded-xl transition-transform duration-300 hover:scale-103">
                 <p className="text-slate-500 text-md">Quantity</p>
