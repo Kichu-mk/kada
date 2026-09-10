@@ -6,6 +6,7 @@ import { getProducts, getProductById, createProduct, updateProduct, deleteProduc
 import { IoChevronBack } from "react-icons/io5";
 import Sale from "../components/sale";
 import { Edit2, Trash2, Image as ImageIcon } from 'lucide-react';
+import MonthlySalesGraph from '../components/MonthlySalesGraph';
 
 const ProductDetail = () => {
   const { user } = useAuth();
@@ -24,7 +25,7 @@ const ProductDetail = () => {
     place: "",
     about: "",
     type: "General",
-    prize: 0,
+    price: 0,
     stock: "In Stock",
     image: null,
   });
@@ -62,7 +63,7 @@ const ProductDetail = () => {
         quantity: product.quantity,
         place: product.place,
         type: product.type || "General",
-        prize: product.prize,
+        price: product.price,
         stock: product.stock,
         image: null,
         about: product.about || "",
@@ -75,7 +76,7 @@ const ProductDetail = () => {
         quantity: 0,
         place: "",
         type: "General",
-        prize: 0,
+        price: 0,
         stock: "In Stock",
         image: null,
         about: "",
@@ -106,7 +107,7 @@ const ProductDetail = () => {
       submitData.append("quantity", String(formData.quantity));
       submitData.append("place", formData.place);
       submitData.append("type", formData.type);
-      submitData.append("prize", String(formData.prize));
+      submitData.append("price", String(formData.price));
       submitData.append("stock", formData.stock);
       submitData.append("about", formData.about);
       if (formData.image) {
@@ -175,12 +176,14 @@ const ProductDetail = () => {
       )}
 
 
-      <Link
-        to="/products"
-        className="text-blue-600 hover:underline h-10 w-full flex items-center justify-start"
-      >
-        <IoChevronBack className="h-7 w-fit hover:h-8 hover:bg-blue-300 rounded p-0.5" />
-      </Link>
+      <div className="flex items-center justify-start w-full mb-4">
+        <Link
+          to="/products"
+          className="text-blue-600 hover:underline h-10 w-auto flex items-center justify-center bg-white rounded-2xl px-3 py-1 transition-transform duration-300 hover:scale-100 shadow border border-slate-300"
+        >
+          <IoChevronBack className="h-7 w-auto hover:h-8 hover:text-blue-500 " />
+        </Link>
+      </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden relative z-10">
         <div className="grid md:grid-cols-2 gap-0">
@@ -236,7 +239,7 @@ const ProductDetail = () => {
               <div className="bg-slate-200 p-4 rounded-xl transition-transform duration-300 hover:scale-103">
                 <p className="text-slate-500 text-md">Price</p>
                 <p className="mt-2 text-2xl font-bold text-slate-800">
-                  ₹{product.prize}
+                  ₹{product.price}
                 </p>
               </div>
             </div>
@@ -260,17 +263,22 @@ const ProductDetail = () => {
             </button>
           </div>
         </div>
-        <div className="rounded-xl border border-slate-300 bg-slate-100 p-4 text-sm text-slate-600">
-          <div>
-            <p className="font-semibold text-slate-700 mb-2 bg-white p-2 text-xl w-20 text-center rounded-2xl border border-slate-200">
-              About
+        
+          <div className="rounded-xl border border-slate-300 bg-slate-100 p-8 w-full h-full">
+            <div className="h-full flex items-center justify-start mb-2"  >
+              <p className="font-medium text-slate-700 bg-white p-2 text-xl w-auto text-center rounded-2xl border border-slate-200 h-full">
+                Description
+              </p>
+            </div>
+            <p className="text-slate-600 whitespace-pre-line h-full p-2 overflow-y-auto text-xl">
+              {product.about || "No description available for this product."}
             </p>
-          </div>
-          <p className="text-slate-600 whitespace-pre-line">
-            {product.about || "No description available for this product."}
-          </p>
+        </div>
+        <div className="rounded-xl border border-slate-300 bg-slate-100  w-full h-full">
+          <MonthlySalesGraph productId={product._id} />
         </div>
       </div>
+      
       {showSale && (
         <Sale
           product={product}
@@ -369,9 +377,9 @@ const ProductDetail = () => {
                     </label>
                     <input
                       type="number"
-                      value={formData.prize}
+                      value={formData.price}
                       onChange={(e) =>
-                        setFormData({ ...formData, prize: e.target.value })
+                        setFormData({ ...formData, price: e.target.value })
                       }
                       required
                       className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"

@@ -35,3 +35,15 @@ export const sellProduct = async (productId, quantity) => {
 
   return data;
 };
+
+export const getMonthlySales = async (productId, month, year) => {
+  const { data } = await axiosInstance.get(`/api/products/${productId}/monthly-sales`, {
+    params: { month, year }
+  });
+  return data;
+};
+
+export const getAvailableMonths = async (productId) => {
+  const { data } = await axiosInstance.get(`/api/products/${productId}/available-months`);
+  return data;
+};

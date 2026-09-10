@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Search, Edit2, Trash2, Image as ImageIcon, Minus } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Image as ImageIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getProducts, createProduct, updateProduct, deleteProduct } from '../api';
 
@@ -20,7 +20,7 @@ const Products = () => {
         place: '',
         about: '',
         type: 'General',
-        prize: 0,
+        price: 0,
         stock: 'In Stock',
         image: null,
     });
@@ -49,7 +49,7 @@ const Products = () => {
                 quantity: product.quantity,
                 place: product.place,
                 type: product.type || 'General',
-                prize: product.prize,
+                price: product.price,
                 stock: product.stock,
                 image: null,
                 about: product.about || '',
@@ -57,7 +57,7 @@ const Products = () => {
             setImagePreview(product.image || null);
         } else {
             setCurrentProduct(null);
-            setFormData({ name: '', quantity: 0, place: '', type: 'General', prize: 0, stock: 'In Stock', image: null, about: '' });
+            setFormData({ name: '', quantity: 0, place: '', type: 'General', price: 0, stock: 'In Stock', image: null, about: '' });
             setImagePreview(null);
         }
         setIsModalOpen(true);
@@ -84,7 +84,7 @@ const Products = () => {
             submitData.append('quantity', String(formData.quantity));
             submitData.append('place', formData.place);
             submitData.append('type', formData.type);
-            submitData.append('prize', String(formData.prize));
+            submitData.append('price', String(formData.price));
             submitData.append('stock', formData.stock);
             submitData.append('about', formData.about);
             if (formData.image) {
@@ -208,7 +208,7 @@ const Products = () => {
                                         {product.type || 'General'}
                                     </span>
                                     <div className="mt-2 text-sm text-slate-600">
-                                        <div className="font-medium text-blue-600">₹{product.prize}</div>
+                                        <div className="font-medium text-blue-600">₹{product.price}</div>
                                     </div>
                                 </div>
                             </div>
@@ -292,7 +292,7 @@ const Products = () => {
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 mb-1">Price (₹)</label>
-                                        <input type="number" value={formData.prize} onChange={(e) => setFormData({ ...formData, prize: e.target.value })} required className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                                        <input type="number" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} required className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">

@@ -5,7 +5,7 @@ const Sale = ({ product, onClose, onSuccess }) => {
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  const totalPrice = quantity * product.prize;
+  const totalPrice = quantity * product.price;
 
   const handleSell = async () => {
     if (!quantity || quantity <= 0) {
@@ -78,7 +78,7 @@ const Sale = ({ product, onClose, onSuccess }) => {
             </h3>
 
             <p className="mt-1 text-sm text-gray-500">
-              Current Rate: ₹{product.prize}
+              Current Rate: ₹{product.price}
             </p>
 
             <p className="text-sm text-gray-500">
@@ -108,7 +108,7 @@ const Sale = ({ product, onClose, onSuccess }) => {
 
           <div className="flex justify-between text-sm text-gray-600">
             <span>Rate</span>
-            <span>₹{product.prize}</span>
+            <span>₹{product.price}</span>
           </div>
 
           <div className="mt-2 flex justify-between text-sm text-gray-600">

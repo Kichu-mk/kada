@@ -22,7 +22,7 @@ const productSchema = new mongoose.Schema({
         type: String, // Category/Type of product
         default: 'General'
     },
-    prize: { // Spelled 'prize' as per user requirement, which might mean 'price'
+    price: { // Spelled 'prize' as per user requirement, which might mean 'price'
         type: Number,
         required: true
     },
@@ -37,7 +37,8 @@ const productSchema = new mongoose.Schema({
     about: {
         type: String, // Description of the product
         default: ''
-    }
+    },
+
 }, { timestamps: true });
 
 module.exports = mongoose.model('Product', productSchema);

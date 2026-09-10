@@ -35,7 +35,7 @@ const getProduct = async (req, res) => {
 // @access  Private
 const createProduct = async (req, res) => {
     try {
-        const { name, quantity, place, prize, stock, type, about } = req.body;
+        const { name, quantity, place, price, stock, type, about } = req.body;
         const imageUrl = req.file ? req.file.path : '';
 
         const product = await Product.create({
@@ -43,7 +43,7 @@ const createProduct = async (req, res) => {
             quantity,
             place,
             type,
-            prize,
+            price,
             stock,
             about,
             image: imageUrl,
@@ -55,7 +55,7 @@ const createProduct = async (req, res) => {
             product: product._id,
             shop: req.user.shop,
             action: 'Created',
-            changes: { initialQuantity: quantity, initialPrize: prize }
+            changes: { initialQuantity: quantity, initialPrice: price }
         });
 
         // Emit real-time event
@@ -78,7 +78,7 @@ const updateProduct = async (req, res) => {
             return res.status(404).json({ message: 'Product not found' });
         }
 
-        const { name, quantity, place, prize, stock, type, about } = req.body;
+        const { name, quantity, place, price, stock, type, about } = req.body;
         const imageUrl = req.file ? req.file.path : product.image;
 
         const changes = {};
@@ -91,7 +91,7 @@ const updateProduct = async (req, res) => {
         product.quantity = quantity !== undefined ? quantity : product.quantity;
         product.place = place || product.place;
         product.type = type || product.type;
-        product.prize = prize !== undefined ? prize : product.prize;
+        product.price = price !== undefined ? price : product.price;
         product.stock = stock || product.stock;
         product.image = imageUrl;
         product.about = about || product.about;
@@ -192,7 +192,7 @@ const sellProduct = async (req, res) => {
     const oldQuantity = product.quantity;
 
     // Calculate total
-    const totalPrice = sellQuantity * product.prize;
+    const totalPrice = sellQuantity * product.price;
 
     // Reduce stock
     product.quantity -= sellQuantity;
@@ -208,7 +208,7 @@ const sellProduct = async (req, res) => {
         oldQuantity,
         soldQuantity: sellQuantity,
         newQuantity: updatedProduct.quantity,
-        price: product.prize,
+        price: product.price,
         totalPrice
       }
     });
@@ -218,7 +218,7 @@ const sellProduct = async (req, res) => {
       product: updatedProduct,
       sale: {
         quantity: sellQuantity,
-        price: product.prize,
+        price: product.price,
         totalPrice
       }
     });
@@ -234,11 +234,108 @@ const sellProduct = async (req, res) => {
 };
 
 
+// @desc    Get daily units-sold data for a given month (for the sales graph)
+// @route   GET /api/products/:id/monthly-sales?month=&year=
+// @access  Private
+const getMonthlySales = async (req, res) => {
+  try {
+    const product = await Product.findOne({ _id: req.params.id, shop: req.user.shop });
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    const { month, year } = req.query;
+    const targetMonth = month ? parseInt(month) - 1 : new Date().getMonth();
+    const targetYear = year ? parseInt(year) : new Date().getFullYear();
+
+    const startDate = new Date(targetYear, targetMonth, 1);
+    const endDate = new Date(targetYear, targetMonth + 1, 1);
+    const daysInMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+
+    const sales = await History.find({
+      product: product._id,
+      shop: req.user.shop,
+      action: 'Sold Product',
+      date: { $gte: startDate, $lt: endDate }
+    });
+
+    // Sum soldQuantity per day (a product could be sold more than once in a day)
+    const salesMap = {};
+    sales.forEach((entry) => {
+      const day = new Date(entry.date).getDate();
+      const qty = entry.changes?.soldQuantity || 0;
+      salesMap[day] = (salesMap[day] || 0) + qty;
+    });
+
+    const chartData = [];
+    for (let day = 1; day <= daysInMonth; day++) {
+      chartData.push({ day, unitsSold: salesMap[day] || 0 });
+    }
+
+    const sorted = [...chartData].sort((a, b) => b.unitsSold - a.unitsSold);
+    const topDays = sorted
+      .slice(0, 3)
+      .filter((d) => d.unitsSold > 0)
+      .map((d) => d.day);
+
+    res.json({
+      productName: product.name,
+      currentPrice: product.price,
+      month: targetMonth + 1,
+      year: targetYear,
+      chartData,
+      topDays
+    });
+  } catch (error) {
+    console.error('Monthly sales error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// @desc    Get list of year-month combos that have sales data (for the picker dropdown)
+// @route   GET /api/products/:id/available-months
+// @access  Private
+const getAvailableMonths = async (req, res) => {
+  try {
+    const product = await Product.findOne({ _id: req.params.id, shop: req.user.shop });
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    const sales = await History.find({
+      product: product._id,
+      shop: req.user.shop,
+      action: 'Sold Product'
+    }).select('date');
+
+    const monthsSet = new Set();
+    sales.forEach((entry) => {
+      const d = new Date(entry.date);
+      monthsSet.add(`${d.getFullYear()}-${d.getMonth() + 1}`);
+    });
+
+    const months = Array.from(monthsSet)
+      .map((m) => {
+        const [year, month] = m.split('-').map(Number);
+        return { year, month };
+      })
+      .sort((a, b) => b.year - a.year || b.month - a.month);
+
+    res.json({ months });
+  } catch (error) {
+    console.error('Available months error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+
 module.exports = {
     getProducts,
     getProduct,
     createProduct,
     updateProduct,
     deleteProduct,
-    sellProduct
+    sellProduct,
+    getMonthlySales,
+    getAvailableMonths
 };
