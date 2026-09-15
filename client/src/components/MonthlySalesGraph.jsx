@@ -6,6 +6,7 @@ import {
   ResponsiveContainer, Dot
 } from 'recharts';
 
+
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'
@@ -83,29 +84,53 @@ function MonthlySalesGraph({ productId }) {
 
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           {/* Month/Year Selector */}
-          <select
-            value={selected ? `${selected.year}-${selected.month}` : ''}
-            onChange={(e) => {
-              const [year, month] = e.target.value.split('-').map(Number);
-              setSelected({ year, month });
-            }}
-            style={{
-              padding: '8px 12px',
-              borderRadius: '10px',
-              border: '1px solid #e2e8f0',
-              fontWeight: 600,
-              color: '#4f46e5',
-              background: '#eef2ff',
-              cursor: 'pointer'
-            }}
-          >
-            {availableMonths.map(m => (
-              <option key={`${m.year}-${m.month}`} value={`${m.year}-${m.month}`}>
-                {MONTH_NAMES[m.month - 1]} {m.year}
-              </option>
-            ))}
-          </select>
+          <div className="flex items-center gap-2">
+  <select
+    value={selected?.month || ''}
+    onChange={(e) => {
+      const month = Number(e.target.value);
 
+      setSelected(prev => ({
+        ...prev,
+        month,
+      }));
+    }}
+    className="rounded-xl border border-slate-200 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-600 shadow-sm outline-none transition hover:bg-indigo-100 focus:ring-2 focus:ring-indigo-300"
+  >
+    <option value="" disabled>
+      Month
+    </option>
+
+    {availableMonths.map(m => (
+      <option key={`${m.year}-${m.month}`} value={m.month}>
+        {MONTH_NAMES[m.month - 1]}
+      </option>
+    ))}
+  </select>
+
+  <select
+    value={selected?.year || ''}
+    onChange={(e) => {
+      const year = Number(e.target.value);
+
+      setSelected(prev => ({
+        ...prev,
+        year,
+      }));
+    }}
+    className="rounded-xl border border-slate-200 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-600 shadow-sm outline-none transition hover:bg-indigo-100 focus:ring-2 focus:ring-indigo-300"
+  >
+    <option value="" disabled>
+      Year
+    </option>
+
+    {[...new Set(availableMonths.map(m => m.year))].map(year => (
+      <option key={year} value={year}>
+        {year}
+      </option>
+    ))}
+  </select>
+</div>
           {data && (
             <div style={{
               background: '#eef2ff',

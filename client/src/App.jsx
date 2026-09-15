@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
 import History from './pages/History';
+import Report from './pages/Report';
 import { AuthProvider } from './context/AuthContext';
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
           <Route path="products" element={<Products />} />
           <Route path="products/:id" element={<ProductDetail />} />
           <Route path="history" element={<History />} />
+          <Route path="report" element={<Report />} />
         </Route>
       </Routes>
     </AuthProvider>

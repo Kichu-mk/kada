@@ -7,6 +7,7 @@ import { IoChevronBack } from "react-icons/io5";
 import Sale from "../components/sale";
 import { Edit2, Trash2, Image as ImageIcon } from 'lucide-react';
 import MonthlySalesGraph from '../components/MonthlySalesGraph';
+import CameraCapture from "../components/uploadImage";
 
 const ProductDetail = () => {
   const { user } = useAuth();
@@ -176,14 +177,16 @@ const ProductDetail = () => {
       )}
 
 
-      <div className="flex items-center justify-start w-full mb-4">
-        <Link
-          to="/products"
-          className="text-blue-600 hover:underline h-10 w-auto flex items-center justify-center bg-white rounded-2xl px-3 py-1 transition-transform duration-300 hover:scale-100 shadow border border-slate-300"
-        >
-          <IoChevronBack className="h-7 w-auto hover:h-8 hover:text-blue-500 " />
-        </Link>
-      </div>
+      <div className="flex items-center justify-end w-full mb-4">
+  <Link
+    to="/products"
+    className="text-blue-600 hover:underline h-10 w-auto flex items-center justify-center bg-white rounded-2xl px-3 py-1 
+               transition-transform duration-300 ease-in-out hover:scale-105 shadow border border-slate-300"
+  >
+    <IoChevronBack className="h-7 w-auto transition-all duration-300 ease-in-out hover:h-8 hover:text-blue-500" />
+  </Link>
+</div>
+
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden relative z-10">
         <div className="grid md:grid-cols-2 gap-0">
@@ -223,6 +226,7 @@ const ProductDetail = () => {
                     <Trash2 size={20} />
                   </button>
                 </div>
+
               </div>
               <h1 className="mt-3 bg-linear-to-r from-blue-500 via-indigo-600 to-purple-500 bg-clip-text text-3xl font-bold text-transparent">
                 {product.name}
@@ -331,6 +335,29 @@ const ProductDetail = () => {
                       accept="image/*"
                       onChange={handleImageChange}
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                  </div>
+
+                  <div className="flex gap-2 mt-3">
+                    <label className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium cursor-pointer hover:bg-slate-200">
+                      <ImageIcon size={16} />
+                      Upload
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
+                      />
+                    </label>
+
+                    <CameraCapture
+                      onCapture={(file, preview) => {
+                        setFormData((previousFormData) => ({
+                          ...previousFormData,
+                          image: file,
+                        }));
+                        setImagePreview(preview);
+                      }}
                     />
                   </div>
                 </div>
