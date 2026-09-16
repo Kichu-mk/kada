@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import Login from './pages/Login';
+import ResetPassword from './pages/ResetPassword';
 import Home from './pages/Home';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
@@ -14,6 +15,7 @@ function App() {
     <AuthProvider>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
         
         {/* Protected Routes */}
         <Route path="/" element={<Layout />}>

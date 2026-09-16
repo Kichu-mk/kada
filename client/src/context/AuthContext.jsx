@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { loginUser, registerUser } from '../api';
+import { loginUser, registerUser, verifyRegistrationOtp, updateProfile as updateProfileRequest } from '../api';
 
 const AuthContext = createContext();
 
@@ -31,11 +31,20 @@ export const AuthProvider = ({ children }) => {
     const register = async (userData) => {
         try {
             const data = await registerUser(userData);
+            return data;
+        } catch (error) {
+            throw error.response?.data?.message || 'Registration failed';
+        }
+    };
+
+    const verifyRegistration = async (registrationId, otp) => {
+        try {
+            const data = await verifyRegistrationOtp(registrationId, otp);
             setUser(data);
             localStorage.setItem('user', JSON.stringify(data));
             return data;
         } catch (error) {
-            throw error.response?.data?.message || 'Registration failed';
+            throw error.response?.data?.message || 'Email verification failed';
         }
     };
 
@@ -44,8 +53,19 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('user');
     };
 
+    const updateProfile = async (profileData) => {
+        try {
+            const data = await updateProfileRequest(profileData);
+            setUser(data);
+            localStorage.setItem('user', JSON.stringify(data));
+            return data;
+        } catch (error) {
+            throw error.response?.data?.message || 'Profile update failed';
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+        <AuthContext.Provider value={{ user, login, register, verifyRegistration, updateProfile, logout, loading }}>
             {children}
         </AuthContext.Provider>
     );

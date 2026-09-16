@@ -1,13 +1,20 @@
 import React, { useEffect, useState } from "react";
-import { useAuth } from '../context/AuthContext';
-import { useParams, Link, useNavigate  } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { getProducts, getProductById, createProduct, updateProduct, deleteProduct } from "../api";
+import {
+  getProducts,
+  getProductById,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+} from "../api";
 import { IoChevronBack } from "react-icons/io5";
 import Sale from "../components/sale";
-import { Edit2, Trash2, Image as ImageIcon } from 'lucide-react';
-import MonthlySalesGraph from '../components/MonthlySalesGraph';
+import { Edit2, Trash2, Image as ImageIcon } from "lucide-react";
+import MonthlySalesGraph from "../components/MonthlySalesGraph";
 import CameraCapture from "../components/uploadImage";
+import { X } from "lucide-react";
 
 const ProductDetail = () => {
   const { user } = useAuth();
@@ -33,23 +40,23 @@ const ProductDetail = () => {
   const [imagePreview, setImagePreview] = useState(null);
 
   const fetchProducts = async () => {
-          try {
-              const productData = await getProducts();
-              setProducts(productData);
-          } catch (error) {
-              console.error('Error fetching products', error);
-          }
+    try {
+      const productData = await getProducts();
+      setProducts(productData);
+    } catch (error) {
+      console.error("Error fetching products", error);
+    }
   };
   const fetchProduct = async () => {
-      try {
-        const productData = await getProductById(id);
-        setProduct(productData);
-      } catch (error) {
-        console.error("Error fetching product details", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    try {
+      const productData = await getProductById(id);
+      setProduct(productData);
+    } catch (error) {
+      console.error("Error fetching product details", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchProducts();
@@ -93,11 +100,11 @@ const ProductDetail = () => {
   };
 
   const handleImageChange = (e) => {
-        if (e.target.files[0]) {
-            setFormData({ ...formData, image: e.target.files[0] });
-            setImagePreview(URL.createObjectURL(e.target.files[0]));
-        }
-    };
+    if (e.target.files[0]) {
+      setFormData({ ...formData, image: e.target.files[0] });
+      setImagePreview(URL.createObjectURL(e.target.files[0]));
+    }
+  };
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -136,14 +143,17 @@ const ProductDetail = () => {
       try {
         await deleteProduct(id);
         await fetchProducts();
-        navigate("/products"); 
+        navigate("/products");
       } catch (error) {
         console.error("Error deleting product", error);
       }
     }
   };
 
-  const productTypes = ['All', ...new Set(products.map((p) => p.type || 'General'))];
+  const productTypes = [
+    "All",
+    ...new Set(products.map((p) => p.type || "General")),
+  ];
 
   if (loading) {
     return <div className="p-8 text-slate-500">Loading product...</div>;
@@ -176,18 +186,6 @@ const ProductDetail = () => {
         />
       )}
 
-
-      <div className="flex items-center justify-end w-full mb-4">
-  <Link
-    to="/products"
-    className="text-blue-600 hover:underline h-10 w-auto flex items-center justify-center bg-white rounded-2xl px-3 py-1 
-               transition-transform duration-300 ease-in-out hover:scale-105 shadow border border-slate-300"
-  >
-    <IoChevronBack className="h-7 w-auto transition-all duration-300 ease-in-out hover:h-8 hover:text-blue-500" />
-  </Link>
-</div>
-
-
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden relative z-10">
         <div className="grid md:grid-cols-2 gap-0">
           <div className="bg-slate-200 min-h-75 flex items-center justify-center p-2 border border-slate-300 rounded-2xl shadow-sm ">
@@ -206,7 +204,7 @@ const ProductDetail = () => {
             <div className="">
               <div className="flex items-center justify-between space-x-4">
                 <span className="inline-block bg-slate-200 px-2 py-1 rounded-full text-xs font-medium text-slate-600 transition-transform duration-300 hover:scale-110">
-                {product.type || "General"}
+                  {product.type || "General"}
                 </span>
                 <div className="flex space-x-2 transition-opacity">
                   <button
@@ -226,13 +224,21 @@ const ProductDetail = () => {
                     <Trash2 size={20} />
                   </button>
                 </div>
-
+                <div className="flex items-center justify-end w-full mb-4">
+                  <Link
+                    to="/products"
+                    className="text-blue-600 bg-white hover:underline h-10 w-auto flex items-center justify-center rounded-xl px-3 py-1 
+               transition-transform duration-300 ease-in-out hover:scale-105 shadow border border-slate-300 hover:text-red-500"
+                  >
+                    <X size={22} className="text-shadow-sky-700 font-bold" />
+                  </Link>
+                </div>
               </div>
               <h1 className="mt-3 bg-linear-to-r from-blue-500 via-indigo-600 to-purple-500 bg-clip-text text-3xl font-bold text-transparent">
                 {product.name}
               </h1>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div className="bg-slate-200 p-4 rounded-xl transition-transform duration-300 hover:scale-103">
                 <p className="text-slate-500 text-md">Quantity</p>
@@ -267,22 +273,22 @@ const ProductDetail = () => {
             </button>
           </div>
         </div>
-        
-          <div className="rounded-xl border border-slate-300 bg-slate-100 p-8 w-full h-full">
-            <div className="h-full flex items-center justify-start mb-2"  >
-              <p className="font-medium text-slate-700 bg-white p-2 text-xl w-auto text-center rounded-2xl border border-slate-200 h-full">
-                Description
-              </p>
-            </div>
-            <p className="text-slate-600 whitespace-pre-line h-full p-2 overflow-y-auto text-xl">
-              {product.about || "No description available for this product."}
+
+        <div className="rounded-xl border border-slate-300 bg-slate-100 p-8 w-full h-full">
+          <div className="h-full flex items-center justify-start mb-2">
+            <p className="font-medium text-slate-700 bg-white p-2 text-xl w-auto text-center rounded-2xl border border-slate-200 h-full">
+              Description
             </p>
+          </div>
+          <p className="text-slate-600 whitespace-pre-line h-full p-2 overflow-y-auto text-xl">
+            {product.about || "No description available for this product."}
+          </p>
         </div>
         <div className="rounded-xl border border-slate-300 bg-slate-100  w-full h-full">
           <MonthlySalesGraph productId={product._id} />
         </div>
       </div>
-      
+
       {showSale && (
         <Sale
           product={product}
@@ -307,7 +313,7 @@ const ProductDetail = () => {
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
               className="bg-white rounded-2xl p-6 md:p-8 w-full max-w-lg shadow-2xl my-8"
             >
-              <h2 className="text-2xl font-bold text-slate-800 mb-6">
+              <h2 className="text-2xl font-bold text-blue-600 mb-6">
                 {currentProduct ? "Edit Product" : "Add New Product"}
               </h2>
               <form onSubmit={handleSave} className="space-y-4">

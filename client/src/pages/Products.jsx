@@ -299,7 +299,7 @@ const Products = () => {
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
               className="bg-white rounded-2xl p-6 md:p-8 w-full max-w-lg shadow-2xl my-8"
             >
-              <h2 className="text-2xl font-bold text-slate-800 mb-6">
+              <h2 className="text-2xl font-bold text-blue-600 mb-6">
                 {currentProduct ? "Edit Product" : "Add New Product"}
               </h2>
               <form onSubmit={handleSave} className="space-y-4">

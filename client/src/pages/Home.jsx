@@ -10,12 +10,23 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Package, Activity, AlertTriangle } from "lucide-react";
-import { getDashboardSummary } from "../api";
+import { changePassword, getDashboardSummary } from "../api";
 import { Store } from "lucide-react";
 
 const Home = () => {
-  const { user } = useAuth();
+  const { user, updateProfile } = useAuth();
   const [summary, setSummary] = useState(null);
+  const [showShopProfile, setShowShopProfile] = useState(false);
+  const [profileMode, setProfileMode] = useState("details");
+  const [profileForm, setProfileForm] = useState({});
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [profileError, setProfileError] = useState("");
+  const [profileMessage, setProfileMessage] = useState("");
+  const [profileLoading, setProfileLoading] = useState(false);
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -31,6 +42,65 @@ const Home = () => {
       fetchDashboard();
     }
   }, [user?.token]);
+
+  const openShopProfile = () => {
+    setProfileForm({
+      username: user?.username || "",
+      email: user?.email || "",
+      shopName: user?.shop?.name || "",
+      location: user?.shop?.location || "",
+      description: user?.shop?.description || "",
+    });
+    setProfileMode("details");
+    setProfileError("");
+    setProfileMessage("");
+    setShowShopProfile(true);
+  };
+
+  const handleProfileChange = (event) => {
+    setProfileForm({ ...profileForm, [event.target.name]: event.target.value });
+  };
+
+  const handlePasswordChange = (event) => {
+    setPasswordForm({ ...passwordForm, [event.target.name]: event.target.value });
+  };
+
+  const saveProfile = async (event) => {
+    event.preventDefault();
+    setProfileError("");
+    setProfileMessage("");
+    setProfileLoading(true);
+    try {
+      await updateProfile(profileForm);
+      setProfileMessage("Profile updated successfully.");
+      setProfileMode("details");
+    } catch (error) {
+      setProfileError(error?.response?.data?.message || error?.message || String(error));
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  const savePassword = async (event) => {
+    event.preventDefault();
+    setProfileError("");
+    setProfileMessage("");
+    setProfileLoading(true);
+    try {
+      const data = await changePassword(
+        passwordForm.currentPassword,
+        passwordForm.newPassword,
+        passwordForm.confirmPassword
+      );
+      setProfileMessage(data.message);
+      setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      setProfileMode("details");
+    } catch (error) {
+      setProfileError(error?.response?.data?.message || error?.message || String(error));
+    } finally {
+      setProfileLoading(false);
+    }
+  };
 
   if (!summary) return <div>Loading dashboard...</div>;
 
@@ -48,15 +118,91 @@ const Home = () => {
     >
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-slate-800">Dashboard</h1>
-        <div className="flex items-center space-x-2 group bg-blue-50/50 pr-4 rounded-xl border border-blue-300 transition duration-300 hover:bg-blue-100 hover:shadow-lg hover:shadow-amber-200/20">
+        <button
+          type="button"
+          onClick={openShopProfile}
+          aria-label="View shop profile"
+          className="flex items-center space-x-2 group bg-blue-50/50 pr-4 rounded-xl border border-blue-300 transition duration-300 hover:bg-blue-100 hover:shadow-lg hover:shadow-amber-200/20"
+        >
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-cyan-400/20 bg-gradient-to-br from-cyan-400 to-blue-600 shadow-lg shadow-cyan-500/20 transition duration-300 group-hover:-translate-y-1 group-hover:rotate-3">
             <Store className="h-6 w-6 text-white" />
           </div>
           <h1 className="luckiest-guy bg-gradient-to-r from-violet-600 via-fuchsia-500 to-blue-400 bg-clip-text text-3xl font-black tracking-tight text-transparent transition-all duration-500 group-hover:tracking-wide">
             {user.shop?.name || "User"}
           </h1>
-        </div>
+        </button>
       </div>
+
+      {showShopProfile && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4" onMouseDown={(event) => {
+          if (event.target === event.currentTarget) setShowShopProfile(false);
+        }}>
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-slate-800">Shop and user details</h2>
+              <button type="button" onClick={() => setShowShopProfile(false)} className="text-2xl text-slate-400 hover:text-slate-700" aria-label="Close profile">×</button>
+            </div>
+            <div className="mt-4 flex gap-2 border-b border-slate-200">
+              {[
+                ["details", "Details"],
+                ["edit", "Edit details"],
+                ["password", "Change password"],
+              ].map(([mode, label]) => (
+                <button key={mode} type="button" onClick={() => { setProfileMode(mode); setProfileError(""); setProfileMessage(""); }} className={`border-b-2 px-3 py-2 text-sm font-medium ${profileMode === mode ? "border-blue-600 text-blue-600" : "border-transparent text-slate-500"}`}>
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {profileError && <div className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">{profileError}</div>}
+            {profileMessage && <div className="mt-4 rounded-lg bg-green-50 p-3 text-sm text-green-700">{profileMessage}</div>}
+
+            {profileMode === "details" && (
+              <div className="mt-5 space-y-3 text-sm">
+                <div><span className="font-semibold text-slate-500">Shop name:</span> {user?.shop?.name || "Not set"}</div>
+                <div><span className="font-semibold text-slate-500">Location:</span> {user?.shop?.location || "Not set"}</div>
+                <div><span className="font-semibold text-slate-500">Description:</span> {user?.shop?.description || "Not set"}</div>
+                <div><span className="font-semibold text-slate-500">Username:</span> {user?.username || "Not set"}</div>
+                <div><span className="font-semibold text-slate-500">Email:</span> {user?.email || "Not set"}</div>
+              </div>
+            )}
+
+            {profileMode === "edit" && (
+              <form onSubmit={saveProfile} className="mt-5 space-y-4">
+                {[
+                  ["shopName", "Shop name", "text"],
+                  ["username", "Username", "text"],
+                  ["email", "Email", "email"],
+                  ["location", "Location", "text"],
+                ].map(([name, label, type]) => (
+                  <label key={name} className="block text-sm font-medium text-slate-700">{label}
+                    <input type={type} name={name} required={name !== "location"} value={profileForm[name] || ""} onChange={handleProfileChange} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500" />
+                  </label>
+                ))}
+                <label className="block text-sm font-medium text-slate-700">Description
+                  <textarea name="description" rows="3" value={profileForm.description || ""} onChange={handleProfileChange} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500" />
+                </label>
+                <button type="submit" disabled={profileLoading} className="w-full rounded-lg bg-blue-600 py-2.5 font-medium text-white hover:bg-blue-700 disabled:opacity-60">{profileLoading ? "Saving..." : "Save changes"}</button>
+              </form>
+            )}
+
+            {profileMode === "password" && (
+              <form onSubmit={savePassword} className="mt-5 space-y-4">
+                {[
+                  ["currentPassword", "Current password"],
+                  ["newPassword", "New password"],
+                  ["confirmPassword", "Confirm new password"],
+                ].map(([name, label]) => (
+                  <label key={name} className="block text-sm font-medium text-slate-700">{label}
+                    <input type="password" name={name} required minLength="8" value={passwordForm[name]} onChange={handlePasswordChange} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500" />
+                  </label>
+                ))}
+                <button type="submit" disabled={profileLoading} className="w-full rounded-lg bg-blue-600 py-2.5 font-medium text-white hover:bg-blue-700 disabled:opacity-60">{profileLoading ? "Changing..." : "Change password"}</button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <motion.div
