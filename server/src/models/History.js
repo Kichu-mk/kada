@@ -24,4 +24,8 @@ const historySchema = new mongoose.Schema({
     }
 });
 
+historySchema.index({ shop: 1, date: -1 });
+historySchema.index({ product: 1, shop: 1, action: 1, date: -1 });
+historySchema.index({ shop: 1, action: 1, date: -1 });
+
 module.exports = mongoose.model('History', historySchema);

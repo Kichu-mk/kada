@@ -1,10 +1,19 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { Home, Package, History, FileText, LogOut } from "lucide-react";
+import {
+  Home,
+  Package,
+  History,
+  FileText,
+  LogOut,
+  X,
+  Store,
+} from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import kada from "../../assets/kada.png";
-const Sidebar = () => {
-  const { logout } = useAuth();
+
+const Sidebar = ({ isOpen, onClose }) => {
+  const { user, logout } = useAuth();
 
   const navItems = [
     { name: "Dashboard", path: "/", icon: <Home size={20} /> },
@@ -13,62 +22,117 @@ const Sidebar = () => {
     { name: "Report", path: "/report", icon: <FileText size={20} /> },
   ];
 
-  return (
-    <div className="w-60 bg-slate-900 text-slate-300 h-screen flex flex-col transition-all duration-300 print:hidden">
-      <div className="p-4 flex flex-col items-center justify-center border-b border-slate-800">
-        <img
-          src={kada}
-          alt="KADA"
-          className="
-            w-full h-auto object-contain rounded-xl
-            animate-[float_3s_ease-in-out_infinite]
-            transition-transform duration-300
-            hover:scale-105
-            "
-        />
-        <p
-          className="
-                text-sm font-bold
-                transition-all duration-300
-                hover:text-cyan-400
-            "
-        >
-          Store Management
-        </p>
+  const sidebarContent = (
+    <div className="flex flex-col h-full bg-slate-900 text-slate-300 select-none">
+      {/* Brand & Logo Section */}
+      <div className="p-4 sm:p-5 flex items-center justify-between border-b border-slate-800">
+        <div className="flex items-center space-x-3">
+          <img
+            src={kada}
+            alt="KADA"
+            className="w-14 h-14 object-contain rounded-xl shadow-md"
+          />
+          <div>
+            <h2 className="black-ops-one-regular text-white text-4xl flex items-center leading-none">
+              KADA
+            </h2>
+            <p className="anonymous-pro-bold-italic text-sm p-0.5 text-slate-400 truncate tracking-wide -mt-1.5">
+              {user?.shop?.name || "Smart Inventory"}
+            </p>
+          </div>
+        </div>
+
+        {/* Close button on mobile/tablet */}
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close navigation"
+            className="lg:hidden p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+          >
+            <X size={20} />
+          </button>
+        )}
       </div>
 
-      <nav className="flex-1 mt-4">
-        <ul className="space-y-2 px-4">
-          {navItems.map((item) => (
-            <li key={item.name}>
-              <NavLink
-                to={item.path}
-                className={({ isActive }) =>
-                  `flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors duration-200 ${
-                    isActive
-                      ? "bg-blue-600 text-white"
-                      : "hover:bg-slate-800 hover:text-white"
-                  }`
-                }
-              >
-                {item.icon}
-                <span>{item.name}</span>
-              </NavLink>
-            </li>
-          ))}
-        </ul>
+      {/* Navigation Items */}
+      <nav className="flex-1 mt-4 px-3 overflow-y-auto space-y-1.5">
+        <div className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+          Menu
+        </div>
+        {navItems.map((item) => (
+          <NavLink
+            key={item.name}
+            to={item.path}
+            onClick={onClose}
+            className={({ isActive }) =>
+              `flex items-center space-x-3 px-3.5 py-3 rounded-xl font-medium text-sm transition-all duration-200 ${
+                isActive
+                  ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30 font-semibold"
+                  : "text-slate-400 hover:bg-slate-800/80 hover:text-slate-100"
+              }`
+            }
+          >
+            {item.icon}
+            <span>{item.name}</span>
+          </NavLink>
+        ))}
       </nav>
 
-      <div className="p-4 border-t border-slate-800">
+      {/* User Info & Logout Footer */}
+      <div className="p-3 border-t border-slate-800 bg-slate-950/40">
+        <div className="px-3 py-2 mb-2 rounded-xl bg-slate-800/50 border border-slate-800 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs">
+            {user?.username ? user.username.charAt(0).toUpperCase() : "U"}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-semibold text-white truncate">
+              {user?.username || "Shop Owner"}
+            </p>
+            <p className="text-[11px] text-slate-400 truncate">
+              {user?.shop?.name || user?.email || "Manager"}
+            </p>
+          </div>
+        </div>
+
         <button
           onClick={logout}
-          className="flex items-center space-x-3 px-4 py-3 w-full rounded-lg text-slate-400 hover:bg-slate-800 hover:text-red-400 transition-colors duration-200"
+          className="flex items-center justify-center space-x-2 px-3 py-2.5 w-full rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 border border-transparent hover:border-red-500/20 transition-all duration-200 text-sm font-medium"
         >
-          <LogOut size={20} />
+          <LogOut size={18} />
           <span>Logout</span>
         </button>
       </div>
     </div>
+  );
+
+  return (
+    <>
+      {/* Desktop Persistent Sidebar */}
+      <aside className="hidden lg:flex w-64 shrink-0 h-screen flex-col border-r border-slate-800 print:hidden">
+        {sidebarContent}
+      </aside>
+
+      {/* Mobile/Tablet Sliding Drawer Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-50 lg:hidden flex print:hidden"
+          role="dialog"
+          aria-modal="true"
+        >
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity duration-300"
+            onClick={onClose}
+          />
+
+          {/* Drawer Menu */}
+          <div className="relative w-72 max-w-[85vw] h-full shadow-2xl z-10 transition-transform duration-300 transform translate-x-0">
+            {sidebarContent}
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
