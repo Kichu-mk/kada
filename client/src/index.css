@@ -30,6 +30,11 @@ body {
   box-sizing: border-box;
 }
 
+.smooth-scroll-area {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
 @media print {
   body {
     background: white;

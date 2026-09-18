@@ -72,7 +72,7 @@ const Layout = () => {
         </header>
 
         {/* Main Content Scroll Area */}
-        <main className="flex-1 overflow-y-auto p-3.5 sm:p-5 md:p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto overscroll-y-contain p-3.5 sm:p-5 md:p-6 lg:p-8 smooth-scroll-area">
           <div className="max-w-7xl mx-auto w-full">
             <Outlet />
           </div>

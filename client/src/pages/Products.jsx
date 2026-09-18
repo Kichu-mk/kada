@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useNavigationType } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Search, Edit2, Trash2, Image as ImageIcon, X, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -14,7 +15,14 @@ import Loading from "../components/Loading";
 
 const Products = () => {
   const { user } = useAuth();
+  const navigationType = useNavigationType();
+  const productsPageRef = useRef(null);
+  const restoreScrollRef = useRef(null);
   const [products, setProducts] = useState([]);
+  const [productTypes, setProductTypes] = useState(["All"]);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("All");
@@ -34,11 +42,66 @@ const Products = () => {
   });
   const [imagePreview, setImagePreview] = useState(null);
 
-  const fetchProducts = async () => {
+  const pageSize = 18;
+  const scrollStateKey = "products-page-scroll";
+
+  useEffect(() => {
+    if (navigationType !== "POP") {
+      return;
+    }
+
+    try {
+      const savedState = sessionStorage.getItem(scrollStateKey);
+      if (savedState) {
+        restoreScrollRef.current = JSON.parse(savedState);
+        if (restoreScrollRef.current.search !== undefined) {
+          setSearch(restoreScrollRef.current.search);
+        }
+        if (restoreScrollRef.current.filterType) {
+          setFilterType(restoreScrollRef.current.filterType);
+        }
+        if (restoreScrollRef.current.page) {
+          setPage(restoreScrollRef.current.page);
+        }
+      }
+    } catch (error) {
+      console.error("Could not restore products page position", error);
+    }
+  }, [navigationType]);
+
+  useEffect(() => {
+    if (
+      loading ||
+      !restoreScrollRef.current ||
+      restoreScrollRef.current.page !== page ||
+      !productsPageRef.current
+    ) {
+      return;
+    }
+
+    const scrollState = restoreScrollRef.current;
+    const scrollContainer = productsPageRef.current.closest("main");
+    if (scrollContainer) {
+      requestAnimationFrame(() => {
+        scrollContainer.scrollTo({ top: scrollState.scrollTop, behavior: "auto" });
+        restoreScrollRef.current = null;
+      });
+    }
+  }, [loading, page]);
+
+  const fetchProducts = async (requestedPage = page) => {
     try {
       setLoading(true);
-      const productData = await getProducts();
-      setProducts(productData || []);
+      const productData = await getProducts({
+        page: requestedPage,
+        limit: pageSize,
+        search,
+        type: filterType,
+      });
+      setProducts(productData.products || []);
+      setTotalProducts(productData.total || 0);
+      setTotalPages(productData.totalPages || 0);
+      setProductTypes(productData.types?.length ? productData.types : ["All"]);
     } catch (error) {
       console.error("Error fetching products", error);
     } finally {
@@ -48,9 +111,17 @@ const Products = () => {
 
   useEffect(() => {
     if (user?.token) {
-      fetchProducts();
+      const timeoutId = setTimeout(() => fetchProducts(page), 250);
+      return () => clearTimeout(timeoutId);
     }
-  }, [user?.token]);
+  }, [user?.token, page, search, filterType]);
+
+  useEffect(() => {
+    if (restoreScrollRef.current) {
+      return;
+    }
+    setPage(1);
+  }, [search, filterType]);
 
   const handleOpenModal = (product = null) => {
     setFormError("");
@@ -137,7 +208,7 @@ const Products = () => {
         await createProduct(submitData);
       }
 
-      await fetchProducts();
+      await fetchProducts(page);
       handleCloseModal();
     } catch (error) {
       console.error("Error saving product", error);
@@ -154,6 +225,12 @@ const Products = () => {
       try {
         await deleteProduct(id);
         setProducts((prev) => prev.filter((p) => p._id !== id));
+        setTotalProducts((prev) => Math.max(prev - 1, 0));
+        if (products.length === 1 && page > 1) {
+          setPage((prev) => prev - 1);
+        } else {
+          fetchProducts(page);
+        }
       } catch (error) {
         console.error("Error deleting product", error);
         alert("Failed to delete product. Please try again.");
@@ -161,23 +238,14 @@ const Products = () => {
     }
   };
 
-  const productTypes = [
-    "All",
-    ...Array.from(new Set(products.map((p) => p.type || "General"))).filter(Boolean),
-  ];
-
-  const filteredProducts = products.filter((p) => {
-    const matchSearch =
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      (p.place && p.place.toLowerCase().includes(search.toLowerCase())) ||
-      (p.about && p.about.toLowerCase().includes(search.toLowerCase()));
-    const matchType =
-      filterType === "All" || (p.type || "General") === filterType;
-    return matchSearch && matchType;
-  });
+  const visiblePages = Array.from(
+    { length: Math.min(totalPages, 10) },
+    (_, index) => index + 1
+  );
 
   return (
     <motion.div
+      ref={productsPageRef}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="space-y-5 sm:space-y-6 relative"
@@ -248,10 +316,26 @@ const Products = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-6">
-          {filteredProducts.map((product) => (
+          {products.map((product) => (
             <Link
               to={`/products/${product._id}`}
               key={product._id}
+              onClick={() => {
+                const scrollContainer = productsPageRef.current?.closest("main");
+                try {
+                  sessionStorage.setItem(
+                    scrollStateKey,
+                    JSON.stringify({
+                      scrollTop: scrollContainer?.scrollTop || 0,
+                      page,
+                      search,
+                      filterType,
+                    }),
+                  );
+                } catch (error) {
+                  console.error("Could not save products page position", error);
+                }
+              }}
               className="block group h-full"
             >
               <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200/80 relative flex flex-col h-full hover:shadow-md hover:border-slate-300 transition-all duration-200">
@@ -263,6 +347,9 @@ const Products = () => {
                         src={product.image}
                         alt={product.name}
                         loading="lazy"
+                        decoding="async"
+                        width="88"
+                        height="88"
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
                     ) : (
@@ -353,7 +440,7 @@ const Products = () => {
             </Link>
           ))}
 
-          {filteredProducts.length === 0 && (
+          {products.length === 0 && (
             <div className="col-span-full py-16 text-center text-slate-500 bg-white rounded-2xl border border-dashed border-slate-300 p-6">
               <p className="text-base font-medium text-slate-700">No products found</p>
               <p className="text-xs sm:text-sm text-slate-400 mt-1">
@@ -368,6 +455,51 @@ const Products = () => {
             </div>
           )}
         </div>
+      )}
+
+      {!loading && totalPages > 0 && (
+        <nav
+          aria-label="Products pagination"
+          className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-200 bg-white px-4 py-4"
+        >
+          <span className="text-sm text-slate-600">
+            Page {page} of {totalPages}
+            <span className="hidden sm:inline"> ({totalProducts} products)</span>
+          </span>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setPage((current) => Math.max(current - 1, 1))}
+              disabled={page === 1}
+              className="px-2.5 py-2 text-sm font-medium text-blue-600 disabled:text-slate-300 disabled:cursor-not-allowed"
+            >
+              PREV
+            </button>
+            {visiblePages.map((pageNumber) => (
+              <button
+                type="button"
+                key={pageNumber}
+                onClick={() => setPage(pageNumber)}
+                aria-current={page === pageNumber ? "page" : undefined}
+                className={`h-10 min-w-10 rounded-full px-2 text-sm font-semibold transition-colors ${
+                  page === pageNumber
+                    ? "bg-blue-600 text-white"
+                    : "text-slate-800 hover:bg-blue-50"
+                }`}
+              >
+                {pageNumber}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => setPage((current) => Math.min(current + 1, totalPages))}
+              disabled={page === totalPages}
+              className="px-2.5 py-2 text-sm font-medium text-blue-600 disabled:text-slate-300 disabled:cursor-not-allowed"
+            >
+              NEXT
+            </button>
+          </div>
+        </nav>
       )}
 
       {/* Add / Edit Product Modal */}

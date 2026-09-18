@@ -229,24 +229,24 @@ const Home = () => {
                 <div className="space-y-3.5 text-xs sm:text-sm">
                   <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
                     <span className="font-semibold text-slate-500 block text-xs">Shop Name</span>
-                    <span className="anonymous-pro-bold text-slate-800 font-medium text-sm mt-0.5 block">{user?.shop?.name || "Not set"}</span>
+                    <span className="text-slate-800 font-medium text-lg mt-0.5 block">{user?.shop?.name || "Not set"}</span>
                   </div>
                   <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
                     <span className="font-semibold text-slate-500 block text-xs">Location</span>
-                    <span className="text-slate-800 font-medium text-sm mt-0.5 block">{user?.shop?.location || "Not set"}</span>
+                    <span className="text-slate-800 font-medium text-lg mt-0.5 block">{user?.shop?.location || "Not set"}</span>
                   </div>
                   <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
                     <span className="font-semibold text-slate-500 block text-xs">Description</span>
-                    <span className="text-slate-800 font-medium text-sm mt-0.5 block">{user?.shop?.description || "Not set"}</span>
+                    <span className="text-slate-800 font-medium text-lg mt-0.5 block">{user?.shop?.description || "Not set"}</span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
                       <span className="font-semibold text-slate-500 block text-xs">Username</span>
-                      <span className="text-slate-800 font-medium text-sm mt-0.5 block">{user?.username || "Not set"}</span>
+                      <span className="text-slate-800 font-medium text-lg mt-0.5 block">{user?.username || "Not set"}</span>
                     </div>
                     <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
                       <span className="font-semibold text-slate-500 block text-xs">Email</span>
-                      <span className="text-slate-800 font-medium text-sm mt-0.5 block truncate">{user?.email || "Not set"}</span>
+                      <span className="text-slate-800 font-medium text-lg mt-0.5 block truncate">{user?.email || "Not set"}</span>
                     </div>
                   </div>
                 </div>

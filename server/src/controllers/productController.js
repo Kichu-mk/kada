@@ -1,13 +1,46 @@
 const Product = require('../models/Product');
 const History = require('../models/History');
 
-// @desc    Get all products for a shop
-// @route   GET /api/products
+// @desc    Get paginated products for a shop
+// @route   GET /api/products?page=1&limit=18&search=&type=
 // @access  Private
 const getProducts = async (req, res) => {
     try {
-        const products = await Product.find({ shop: req.user.shop }).sort({ createdAt: -1 });
-        res.json(products);
+        const page = Math.max(Number.parseInt(req.query.page, 10) || 1, 1);
+        const limit = Math.min(Math.max(Number.parseInt(req.query.limit, 10) || 18, 1), 100);
+        const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
+        const type = typeof req.query.type === 'string' ? req.query.type.trim() : '';
+        const query = { shop: req.user.shop };
+
+        if (search) {
+            const searchExpression = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+            query.$or = [
+                { name: searchExpression },
+                { place: searchExpression },
+                { about: searchExpression },
+            ];
+        }
+        if (type && type !== 'All') {
+            query.type = type;
+        }
+
+        const [products, total, types] = await Promise.all([
+            Product.find(query)
+                .sort({ createdAt: -1 })
+                .skip((page - 1) * limit)
+                .limit(limit),
+            Product.countDocuments(query),
+            Product.distinct('type', { shop: req.user.shop }),
+        ]);
+
+        res.json({
+            products,
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+            types: ['All', ...types.filter(Boolean).sort()],
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });

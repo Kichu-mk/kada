@@ -36,6 +36,7 @@ const ProductDetail = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formError, setFormError] = useState("");
   const [productTypes, setProductTypes] = useState([]);
+  const [salesRefreshKey, setSalesRefreshKey] = useState(0);
   const [formData, setFormData] = useState({
     name: "",
     quantity: 0,
@@ -47,6 +48,14 @@ const ProductDetail = () => {
     image: null,
   });
   const [imagePreview, setImagePreview] = useState(null);
+
+  const handleBackToProducts = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate("/products");
+    }
+  };
 
   const fetchProduct = async () => {
     try {
@@ -69,12 +78,9 @@ const ProductDetail = () => {
   // Load product categories for datalist
   useEffect(() => {
     getProducts()
-      .then((items) => {
-        if (items) {
-          const types = Array.from(
-            new Set(items.map((p) => p.type || "General")),
-          ).filter(Boolean);
-          setProductTypes(types);
+      .then((data) => {
+        if (data) {
+          setProductTypes((data.types || []).filter((type) => type !== "All"));
         }
       })
       .catch(() => {});
@@ -151,6 +157,11 @@ const ProductDetail = () => {
     }
   };
 
+  const handleSaleSuccess = (updatedProduct) => {
+    setProduct(updatedProduct);
+    setSalesRefreshKey((currentKey) => currentKey + 1);
+  };
+
   const handleDelete = async () => {
     if (window.confirm(`Are you sure you want to delete "${product.name}"?`)) {
       try {
@@ -182,6 +193,10 @@ const ProductDetail = () => {
         </p>
         <Link
           to="/products"
+          onClick={(event) => {
+            event.preventDefault();
+            handleBackToProducts();
+          }}
           className="mt-5 inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-xs font-semibold rounded-xl hover:bg-blue-700 transition shadow-sm"
         >
           <ArrowLeft size={16} /> Back to Products
@@ -200,6 +215,10 @@ const ProductDetail = () => {
       <div className="flex flex-wrap items-center justify-between gap-3 pb-2 border-b border-slate-200/60">
         <Link
           to="/products"
+          onClick={(event) => {
+            event.preventDefault();
+            handleBackToProducts();
+          }}
           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-slate-600 hover:text-slate-900 bg-white border border-slate-200 hover:border-slate-300 shadow-xs text-xs sm:text-sm font-semibold transition-all duration-150"
         >
           <ArrowLeft size={16} /> Back to Products
@@ -329,7 +348,10 @@ const ProductDetail = () => {
 
       {/* Monthly Sales Performance Graph */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
-        <MonthlySalesGraph productId={product._id} />
+        <MonthlySalesGraph
+          productId={product._id}
+          refreshKey={salesRefreshKey}
+        />
       </div>
 
       {/* Sale Modal */}
@@ -337,9 +359,7 @@ const ProductDetail = () => {
         <Sale
           product={product}
           onClose={() => setShowSale(false)}
-          onSuccess={(updatedProduct) => {
-            setProduct(updatedProduct);
-          }}
+          onSuccess={handleSaleSuccess}
         />
       )}
 

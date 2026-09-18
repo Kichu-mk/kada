@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { getMonthlySales, getAvailableMonths } from "../api/productsApi";
 import {
   LineChart,
@@ -35,7 +35,7 @@ const TopDayDot = (props) => {
   );
 };
 
-function MonthlySalesGraph({ productId }) {
+function MonthlySalesGraph({ productId, refreshKey = 0 }) {
   const [availableMonths, setAvailableMonths] = useState([]);
   const [selected, setSelected] = useState(null); // { year, month }
   const [data, setData] = useState(null);
@@ -52,12 +52,21 @@ function MonthlySalesGraph({ productId }) {
         const months = res?.months || [];
         setAvailableMonths(months);
         if (months.length > 0) {
-          setSelected(months[0]);
+          setSelected((currentSelection) => {
+            if (!currentSelection) return months[0];
+            const hasCurrentMonth = months.some(
+              (month) =>
+                month.year === currentSelection.year &&
+                month.month === currentSelection.month,
+            );
+            return hasCurrentMonth ? currentSelection : months[0];
+          });
         } else {
           // Fallback to current month if no sales yet
           const now = new Date();
-          setSelected({ year: now.getFullYear(), month: now.getMonth() + 1 });
-          setLoading(false);
+          setSelected((currentSelection) => (
+            currentSelection || { year: now.getFullYear(), month: now.getMonth() + 1 }
+          ));
         }
       })
       .catch((err) => {
@@ -68,25 +77,29 @@ function MonthlySalesGraph({ productId }) {
     return () => {
       isMounted = false;
     };
-  }, [productId]);
+  }, [productId, refreshKey]);
 
   // 2. Fetch graph data when month/year changes
-  const fetchMonthlySales = useCallback(async () => {
-    if (!selected || !productId) return;
-    setLoading(true);
-    try {
-      const res = await getMonthlySales(productId, selected.month, selected.year);
-      setData(res);
-    } catch (err) {
-      console.error("Error fetching monthly sales", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [productId, selected]);
-
   useEffect(() => {
-    fetchMonthlySales();
-  }, [fetchMonthlySales]);
+    if (!selected || !productId) return;
+
+    let isMounted = true;
+    setLoading(true);
+    getMonthlySales(productId, selected.month, selected.year)
+      .then((res) => {
+        if (isMounted) setData(res);
+      })
+      .catch((err) => {
+        console.error("Error fetching monthly sales", err);
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [productId, selected, refreshKey]);
 
   const uniqueYears = Array.from(new Set(availableMonths.map((m) => m.year)));
   if (uniqueYears.length === 0) {

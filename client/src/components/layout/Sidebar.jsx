@@ -32,11 +32,11 @@ const Sidebar = ({ isOpen, onClose }) => {
             alt="KADA"
             className="w-14 h-14 object-contain rounded-xl shadow-md"
           />
-          <div>
-            <h2 className="black-ops-one-regular text-white text-4xl flex items-center leading-none">
+          <div className="flex flex-col justify-end ">
+            <h2 className="black-ops-one-regular text-white text-4xl -mb-4 ">
               KADA
             </h2>
-            <p className="anonymous-pro-bold-italic text-sm p-0.5 text-slate-400 truncate tracking-wide -mt-1.5">
+            <p className="anonymous-pro-bold-italic text-sm pt-1.5 pb-0 pl-1 text-slate-400 truncate tracking-wide ">
               {user?.shop?.name || "Smart Inventory"}
             </p>
           </div>
