@@ -36,7 +36,7 @@ const Sidebar = ({ isOpen, onClose }) => {
             <h2 className="black-ops-one-regular text-white text-4xl -mb-4 ">
               KADA
             </h2>
-            <p className="anonymous-pro-bold-italic text-sm pt-1.5 pb-0 pl-1 text-slate-400 truncate tracking-wide ">
+            <p className="anonymous-pro-bold-italic text-sm pt-2 pb-0 pl-1 text-slate-400 truncate tracking-wide ">
               {user?.shop?.name || "Smart Inventory"}
             </p>
           </div>

@@ -229,6 +229,11 @@ const sellProduct = async (req, res) => {
 
     // Reduce stock
     product.quantity -= sellQuantity;
+    product.stock = product.quantity === 0
+      ? 'Out of Stock'
+      : product.quantity < 5
+        ? 'Low Stock'
+        : 'In Stock';
 
     const updatedProduct = await product.save();
 
@@ -245,6 +250,9 @@ const sellProduct = async (req, res) => {
         totalPrice
       }
     });
+
+    // Keep other product views in sync with the sale.
+    req.app.get('io').emit(`shop-${req.user.shop}-product-updated`, updatedProduct);
 
     res.status(200).json({
       message: 'Product sold successfully',

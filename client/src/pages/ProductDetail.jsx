@@ -539,21 +539,21 @@ const ProductDetail = () => {
                       />
                     </div>
 
-                    <div>
+                    <div className="flex flex-col w-full">
                       <label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1">
                         Stock Status
                       </label>
-                      <select
-                        value={formData.stock}
-                        onChange={(e) =>
-                          setFormData({ ...formData, stock: e.target.value })
-                        }
-                        className="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition bg-white"
+                      <output
+                        className={`w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition ${
+                          formData.stock === "In Stock"
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200/60"
+                            : formData.stock === "Low Stock"
+                            ? "bg-amber-50 text-amber-700 border border-amber-200/60"
+                            : "bg-red-50 text-red-700 border border-red-200/60"
+                        }`}
                       >
-                        <option value="In Stock">In Stock</option>
-                        <option value="Low Stock">Low Stock</option>
-                        <option value="Out of Stock">Out of Stock</option>
-                      </select>
+                        {formData.stock}
+                      </output>
                     </div>
                   </div>
 

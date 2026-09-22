@@ -4,6 +4,7 @@ import { X, ShoppingBag, Plus, Minus, AlertCircle, CheckCircle2 } from "lucide-r
 
 const Sale = ({ product, onClose, onSuccess }) => {
   const [quantity, setQuantity] = useState(1);
+  const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -197,4 +198,4 @@ const Sale = ({ product, onClose, onSuccess }) => {
   );
 };
 
-export default Sale;
+export default Sale;
