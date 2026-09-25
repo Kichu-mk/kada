@@ -17,7 +17,7 @@ const server = http.createServer(app);
 // Setup Socket.io
 const io = new Server(server, {
     cors: {
-        origin: '*', // To be restricted in production
+        origin: ["https://kada.vercel.app", "http://localhost:5173"],// To be restricted in production
         methods: ['GET', 'POST', 'PUT', 'DELETE']
     }
 });
