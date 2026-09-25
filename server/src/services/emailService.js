@@ -1,42 +1,39 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
-const getTransporter = () => {
-    const SMTP_HOST = process.env.SMTP_HOST?.trim();
-    const SMTP_PORT = process.env.SMTP_PORT?.trim();
-    const SMTP_USER = process.env.SMTP_USER?.trim();
-    const SMTP_PASSWORD = process.env.SMTP_PASSWORD?.trim();
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-    if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASSWORD) {
-        throw new Error('SMTP configuration is missing');
-    }
-
-    return nodemailer.createTransport({
-        host: SMTP_HOST,
-        port: Number(SMTP_PORT),
-        secure: Number(SMTP_PORT) === 465,
-        auth: { user: SMTP_USER, pass: SMTP_PASSWORD },
-        connectionTimeout: 10000,
-        greetingTimeout: 10000,
-        socketTimeout: 10000
-    });
-};
+const FROM_EMAIL = process.env.EMAIL_FROM || 'KADA <onboarding@resend.dev>';
 
 const sendRegistrationOtp = async (email, otp) => {
-    await getTransporter().sendMail({
-        from: process.env.SMTP_FROM || process.env.SMTP_USER,
+    const { data, error } = await resend.emails.send({
+        from: FROM_EMAIL,
         to: email,
-        subject: 'KADA email verification code',
+        subject: 'KADA - Store Management Website Email verification code',
         text: `Your KADA verification code is ${otp}. It expires in 10 minutes.`
     });
+
+    if (error) {
+        console.error('Resend error (OTP):', error);
+        throw new Error('Failed to send verification email');
+    }
+
+    return data;
 };
 
 const sendPasswordResetEmail = async (email, resetUrl) => {
-    await getTransporter().sendMail({
-        from: process.env.SMTP_FROM || process.env.SMTP_USER,
+    const { data, error } = await resend.emails.send({
+        from: FROM_EMAIL,
         to: email,
         subject: 'Reset your KADA password',
         text: `Reset your KADA password using this link: ${resetUrl}. This link expires in 15 minutes.`
     });
+
+    if (error) {
+        console.error('Resend error (password reset):', error);
+        throw new Error('Failed to send password reset email');
+    }
+
+    return data;
 };
 
 module.exports = { sendRegistrationOtp, sendPasswordResetEmail };

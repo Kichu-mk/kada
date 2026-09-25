@@ -1,6 +1,8 @@
 const crypto = require('crypto');
 const User = require('../models/User');
 const Shop = require('../models/Shop');
+const Tenant = require('../models/Tenant');
+const UserShopMembership = require('../models/UserShopMembership');
 const RegistrationAttempt = require('../models/RegistrationAttempt');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -34,10 +36,10 @@ const registerUser = async (req, res) => {
 
         const [userExists, emailExists] = await Promise.all([
             User.findOne({ username }),
-            User.findOne({ email: normalizedEmail })
+            // User.findOne({ email: normalizedEmail })
         ]);
         if (userExists) return res.status(409).json({ message: 'Username is already in use' });
-        if (emailExists) return res.status(409).json({ message: 'Email is already in use' });
+        // if (emailExists) return res.status(409).json({ message: 'Email is already in use' });
 
         const otp = generateOtp();
         const attempt = await RegistrationAttempt.findOneAndUpdate(
@@ -59,6 +61,11 @@ const registerUser = async (req, res) => {
 };
 
 const verifyRegistrationOtp = async (req, res) => {
+    let createdUser;
+    let createdTenant;
+    let createdShop;
+    let createdMembership;
+
     try {
         const { registrationId, otp } = req.body;
         const attempt = await RegistrationAttempt.findById(registrationId);
@@ -72,20 +79,58 @@ const verifyRegistrationOtp = async (req, res) => {
             return res.status(400).json({ message: 'Invalid verification code' });
         }
 
-        const user = await User.create({
+        const existingUser = await User.findOne({
+            $or: [{ username: attempt.username }, { email: attempt.email }]
+        });
+        if (existingUser) {
+            await RegistrationAttempt.findByIdAndDelete(attempt._id);
+            return res.status(409).json({
+                message: existingUser.email === attempt.email
+                    ? 'Email is already in use'
+                    : 'Username is already in use'
+            });
+        }
+
+        createdUser = await User.create({
             username: attempt.username, email: attempt.email, password: attempt.password
         });
-        const shop = await Shop.create({
-            name: attempt.shopName, owner: user._id,
+        createdTenant = await Tenant.create({
+            name: attempt.shopName,
+            slug: `${attempt.shopName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${Date.now()}`
+        });
+        createdShop = await Shop.create({
+            tenantId: createdTenant._id,
+            name: attempt.shopName, owner: createdUser._id,
             location: attempt.location, description: attempt.description
         });
-        user.shop = shop._id;
-        await user.save();
+        createdUser.shop = createdShop._id;
+        createdUser.tenantId = createdTenant._id;
+        await createdUser.save();
+        createdMembership = await UserShopMembership.create({
+            tenantId: createdTenant._id,
+            shopId: createdShop._id,
+            userId: createdUser._id,
+            role: 'super_admin',
+            status: 'active'
+        });
         await RegistrationAttempt.findByIdAndDelete(attempt._id);
-        res.status(201).json(userResponse(user, shop));
+        res.status(201).json(userResponse(createdUser, createdShop));
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        if (createdMembership) await UserShopMembership.findByIdAndDelete(createdMembership._id);
+        if (createdShop) await Shop.findByIdAndDelete(createdShop._id);
+        if (createdTenant) await Tenant.findByIdAndDelete(createdTenant._id);
+        if (createdUser) await User.findByIdAndDelete(createdUser._id);
+
+        console.error('Registration verification error:', error.code || error.name, error.message);
+        if (error.code === 11000) {
+            const duplicateField = Object.keys(error.keyPattern || {})[0];
+            return res.status(409).json({
+                message: duplicateField === 'email'
+                    ? 'Email is already in use'
+                    : 'Username or tenant name is already in use'
+            });
+        }
+        res.status(500).json({ message: 'Unable to complete registration. Please try again.' });
     }
 };
 

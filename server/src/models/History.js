@@ -1,6 +1,12 @@
 const mongoose = require('mongoose');
 
 const historySchema = new mongoose.Schema({
+    tenantId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Tenant',
+        required: true,
+        index: true
+    },
     product: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Product',
@@ -9,7 +15,8 @@ const historySchema = new mongoose.Schema({
     shop: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Shop',
-        required: true
+        required: true,
+        index: true
     },
     action: {
         type: String, // e.g., 'Created', 'Updated', 'Stock Added', 'Delivered'
@@ -24,8 +31,8 @@ const historySchema = new mongoose.Schema({
     }
 });
 
-historySchema.index({ shop: 1, date: -1 });
-historySchema.index({ product: 1, shop: 1, action: 1, date: -1 });
-historySchema.index({ shop: 1, action: 1, date: -1 });
+historySchema.index({ tenantId: 1, shop: 1, date: -1 });
+historySchema.index({ tenantId: 1, product: 1, shop: 1, action: 1, date: -1 });
+historySchema.index({ tenantId: 1, shop: 1, action: 1, date: -1 });
 
 module.exports = mongoose.model('History', historySchema);

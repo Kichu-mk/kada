@@ -1,0 +1,67 @@
+version: '3.9'
+
+services:
+  mongo:
+    image: mongo:7
+    container_name: kada-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: kada
+    volumes:
+      - mongo_data:/data/db
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    container_name: kada-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+  server:
+    build:
+      context: ./server
+    container_name: kada-server
+    restart: unless-stopped
+    depends_on:
+      - mongo
+      - mailhog
+    ports:
+      - "5000:5000"
+    environment:
+      PORT: ${PORT:-5000}
+      MONGO_URI: ${MONGO_URI:-mongodb://mongo:27017/kada}
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
+      SMTP_HOST: ${SMTP_HOST:-mailhog}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-no-reply@kada.local}
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    command: npm run dev
+
+  client:
+    build:
+      context: ./client
+    container_name: kada-client
+    restart: unless-stopped
+    depends_on:
+      - server
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:5000}
+      HOST: 0.0.0.0
+      PORT: 5173
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    command: npm run dev -- --host 0.0.0.0 --port 5173
+
+volumes:
+  mongo_data:

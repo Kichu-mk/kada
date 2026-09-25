@@ -72,6 +72,7 @@ const createProduct = async (req, res) => {
         const imageUrl = req.file ? req.file.path : '';
 
         const product = await Product.create({
+            tenantId: req.tenantId,
             name,
             quantity,
             place,
@@ -85,6 +86,7 @@ const createProduct = async (req, res) => {
 
         // Add to history
         await History.create({
+            tenantId: req.tenantId,
             product: product._id,
             shop: req.user.shop,
             action: 'Created',
@@ -128,12 +130,14 @@ const updateProduct = async (req, res) => {
         product.stock = stock || product.stock;
         product.image = imageUrl;
         product.about = about || product.about;
+        product.tenantId = req.tenantId;
 
         const updatedProduct = await product.save();
 
         // Add to history if quantity changed
         if (Object.keys(changes).length > 0) {
             await History.create({
+                tenantId: req.tenantId,
                 product: updatedProduct._id,
                 shop: req.user.shop,
                 action: 'Updated Quantity',
@@ -141,6 +145,7 @@ const updateProduct = async (req, res) => {
             });
         } else {
              await History.create({
+                tenantId: req.tenantId,
                 product: updatedProduct._id,
                 shop: req.user.shop,
                 action: 'Updated Details',
@@ -172,6 +177,7 @@ const deleteProduct = async (req, res) => {
 
         // Add to history
         await History.create({
+            tenantId: req.tenantId,
             product: product._id, // Will be a dangling reference, which is okay for history tracking if we don't strict populate
             shop: req.user.shop,
             action: 'Deleted',
@@ -229,6 +235,7 @@ const sellProduct = async (req, res) => {
 
     // Reduce stock
     product.quantity -= sellQuantity;
+    product.tenantId = req.tenantId;
     product.stock = product.quantity === 0
       ? 'Out of Stock'
       : product.quantity < 5
@@ -239,6 +246,7 @@ const sellProduct = async (req, res) => {
 
     // Add sale to history
     await History.create({
+      tenantId: req.tenantId,
       product: updatedProduct._id,
       shop: req.user.shop,
       action: 'Sold Product',

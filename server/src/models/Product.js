@@ -1,6 +1,12 @@
 const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema({
+    tenantId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Tenant',
+        required: true,
+        index: true
+    },
     name: {
         type: String,
         required: true,
@@ -9,7 +15,8 @@ const productSchema = new mongoose.Schema({
     shop: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Shop',
-        required: true
+        required: true,
+        index: true
     },
     quantity: {
         type: Number,
@@ -41,7 +48,7 @@ const productSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
-productSchema.index({ shop: 1, createdAt: -1 });
-productSchema.index({ shop: 1, type: 1 });
+productSchema.index({ tenantId: 1, shop: 1, createdAt: -1 });
+productSchema.index({ tenantId: 1, shop: 1, type: 1 });
 
 module.exports = mongoose.model('Product', productSchema);

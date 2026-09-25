@@ -18,9 +18,16 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    tenantId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Tenant',
+        default: null,
+        index: true
+    },
     shop: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Shop'
+        ref: 'Shop',
+        default: null
     },
     passwordResetTokenHash: {
         type: String,
