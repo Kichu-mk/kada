@@ -24,7 +24,7 @@ const Layout = () => {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-900 text-slate-300">
+      <div className="flex h-dvh items-center justify-center bg-slate-900 text-slate-300">
         <Loading text="Loading Kada System..." size="lg" />
       </div>
     );
@@ -35,14 +35,14 @@ const Layout = () => {
   }
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden font-sans text-slate-900">
+    <div className="flex h-dvh bg-slate-50 overflow-hidden font-sans text-slate-900">
       {/* Sidebar (Desktop pinned + Mobile/Tablet drawer) */}
       <Sidebar
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
       />
 
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 h-dvh overflow-hidden">
         {/* Mobile / Tablet Top Header Bar */}
         <header className="lg:hidden shrink-0 bg-slate-900 text-white border-b border-slate-800 px-4 py-3 flex items-center justify-between z-30 print:hidden shadow-sm">
           <div className="flex items-center gap-3">
@@ -72,7 +72,7 @@ const Layout = () => {
         </header>
 
         {/* Main Content Scroll Area */}
-        <main className="flex-1 overflow-y-auto overscroll-y-contain p-3.5 sm:p-5 md:p-6 lg:p-8 smooth-scroll-area">
+        <main className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain p-3.5 pb-[calc(env(safe-area-inset-bottom)+0.875rem)] sm:p-5 sm:pb-[calc(env(safe-area-inset-bottom)+1.25rem)] md:p-6 md:pb-[calc(env(safe-area-inset-bottom)+1.5rem)] lg:p-8 lg:pb-[calc(env(safe-area-inset-bottom)+2rem)] smooth-scroll-area">
           <div className="max-w-7xl mx-auto w-full">
             <Outlet />
           </div>

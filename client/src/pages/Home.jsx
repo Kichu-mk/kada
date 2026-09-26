@@ -153,7 +153,7 @@ const Home = () => {
             <span className="text-[10px] font-semibold text-slate-400 block uppercase tracking-wider">
               Store
             </span>
-            <span className="black-ops-one-regular text-sm sm:text-lg font-bold text-slate-800 group-hover:text-blue-600 transition-colors block truncate max-w-[150px] sm:max-w-[200px]">
+            <span className="text-sm sm:text-lg font-bold text-slate-800 group-hover:text-blue-600 transition-colors block truncate max-w-[150px] sm:max-w-[200px]">
               {user.shop?.name || "My Shop"}
             </span>
           </div>

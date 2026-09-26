@@ -109,7 +109,7 @@ const Sidebar = ({ isOpen, onClose }) => {
   return (
     <>
       {/* Desktop Persistent Sidebar */}
-      <aside className="hidden lg:flex w-64 shrink-0 h-screen flex-col border-r border-slate-800 print:hidden">
+      <aside className="hidden lg:flex w-64 shrink-0 h-dvh flex-col border-r border-slate-800 print:hidden">
         {sidebarContent}
       </aside>
 
@@ -127,7 +127,7 @@ const Sidebar = ({ isOpen, onClose }) => {
           />
 
           {/* Drawer Menu */}
-          <div className="relative w-72 max-w-[85vw] h-full shadow-2xl z-10 transition-transform duration-300 transform translate-x-0">
+          <div className="relative w-72 max-w-[85vw] h-dvh shadow-2xl z-10 transition-transform duration-300 transform translate-x-0">
             {sidebarContent}
           </div>
         </div>
