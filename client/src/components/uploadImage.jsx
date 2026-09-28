@@ -12,6 +12,24 @@ const CameraCapture = ({ onCapture }) => {
   const [currentCamera, setCurrentCamera] = useState(0);
   const [error, setError] = useState("");
   const [cameraStarting, setCameraStarting] = useState(false);
+  const [cameraAspectRatio, setCameraAspectRatio] = useState(null);
+  const [viewportSize, setViewportSize] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  });
+
+  const isPortrait = viewportSize.height > viewportSize.width;
+  const aspectRatio = cameraAspectRatio || (isPortrait ? 3 / 4 : 16 / 9);
+  const maxCameraHeight = Math.min(
+    viewportSize.height * 0.65,
+    Math.max(120, viewportSize.height * 0.95 - 180)
+  );
+  const cameraWidth = Math.min(
+    viewportSize.width - 28,
+    512,
+    maxCameraHeight * aspectRatio
+  );
+  const cameraHeight = cameraWidth / aspectRatio;
 
   const isMobileOrTablet = () => {
     return /android|iphone|ipad|ipod|tablet|mobile/i.test(
@@ -55,16 +73,19 @@ const CameraCapture = ({ onCapture }) => {
     try {
       setError("");
       setCameraStarting(true);
+      setCameraAspectRatio(null);
       stopCamera();
 
+      const width = isPortrait ? 720 : 1280;
+      const height = isPortrait ? 1280 : 720;
       let constraints;
 
       if (cameraList && cameraList.length > 0 && cameraList[cameraIndex]?.deviceId) {
         constraints = {
           video: {
             deviceId: { exact: cameraList[cameraIndex].deviceId },
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
+            width: { ideal: width },
+            height: { ideal: height },
           },
           audio: false,
         };
@@ -72,8 +93,8 @@ const CameraCapture = ({ onCapture }) => {
         constraints = {
           video: {
             facingMode: isMobileOrTablet() ? "environment" : "user",
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
+            width: { ideal: width },
+            height: { ideal: height },
           },
           audio: false,
         };
@@ -85,6 +106,11 @@ const CameraCapture = ({ onCapture }) => {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
+        if (videoRef.current.videoWidth && videoRef.current.videoHeight) {
+          setCameraAspectRatio(
+            videoRef.current.videoWidth / videoRef.current.videoHeight
+          );
+        }
       }
     } catch (err) {
       console.error(err);
@@ -180,7 +206,16 @@ const CameraCapture = ({ onCapture }) => {
   };
 
   useEffect(() => {
+    const updateViewportSize = () => {
+      setViewportSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    };
+
+    window.addEventListener("resize", updateViewportSize);
     return () => {
+      window.removeEventListener("resize", updateViewportSize);
       stopCamera();
     };
   }, []);
@@ -219,7 +254,13 @@ const CameraCapture = ({ onCapture }) => {
             </div>
 
             {/* Video / Captured Viewport */}
-            <div className="relative bg-slate-950 aspect-video sm:aspect-[4/3] flex items-center justify-center overflow-hidden">
+            <div
+              className="relative self-center bg-slate-950 flex items-center justify-center overflow-hidden"
+              style={{
+                width: `${cameraWidth}px`,
+                height: `${cameraHeight}px`,
+              }}
+            >
               {capturedImage ? (
                 <img
                   src={capturedImage}
@@ -229,10 +270,16 @@ const CameraCapture = ({ onCapture }) => {
               ) : (
                 <video
                   ref={videoRef}
+                  onLoadedMetadata={(event) => {
+                    const { videoWidth, videoHeight } = event.currentTarget;
+                    if (videoWidth && videoHeight) {
+                      setCameraAspectRatio(videoWidth / videoHeight);
+                    }
+                  }}
                   autoPlay
                   playsInline
                   muted
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                 />
               )}
 
