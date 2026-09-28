@@ -4,14 +4,15 @@ const { getProducts, getProduct, createProduct, updateProduct, deleteProduct, se
 const { protect } = require('../middlewares/auth');
 const { ensureTenantContext } = require('../middlewares/tenantContext');
 const upload = require('../middlewares/upload');
+const { uploadToCloudinary } = upload;
 
 router.route('/')
     .get(protect, ensureTenantContext, getProducts)
-    .post(protect, ensureTenantContext, upload.single('image'), createProduct);
+    .post(protect, ensureTenantContext, upload.single('image'), uploadToCloudinary, createProduct);
 
 router.route('/:id')
     .get(protect, ensureTenantContext, getProduct)
-    .put(protect, ensureTenantContext, upload.single('image'), updateProduct)
+    .put(protect, ensureTenantContext, upload.single('image'), uploadToCloudinary, updateProduct)
     .delete(protect, ensureTenantContext, deleteProduct);
 
 router.route('/:id/sell')
