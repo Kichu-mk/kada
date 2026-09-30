@@ -445,8 +445,19 @@ const Home = () => {
                   key={i}
                   className="p-3.5 bg-amber-50/70 border border-amber-200/80 rounded-xl text-xs sm:text-sm text-slate-700 flex items-start gap-2.5"
                 >
-                  <span className="w-2 h-2 rounded-full bg-amber-500 mt-1.5 shrink-0"></span>
-                  <div className="flex-1">{alert.message}</div>
+                  {alert.stockStatus === 'out-of-stock' && (
+                    <span className="w-2 h-2 rounded-full bg-red-500 mt-1.5 shrink-0"></span>
+                  )}
+                  {alert.stockStatus === 'low' && (
+                    <span className="w-2 h-2 rounded-full bg-amber-500 mt-1.5 shrink-0"></span>
+                  )}
+                  {alert.stockStatus === 'out-of-stock' && (
+                    <div className="flex-1 text-red-800">{alert.message}</div>
+                  )}
+                  {alert.stockStatus === 'low' && (
+                    <div className="flex-1">{alert.message}</div>
+                  )}
+                  
                 </div>
               ))
             )}

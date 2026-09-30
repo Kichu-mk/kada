@@ -32,8 +32,9 @@ const CameraCapture = ({ onCapture }) => {
   const cameraHeight = cameraWidth / aspectRatio;
 
   const isMobileOrTablet = () => {
-    return /android|iphone|ipad|ipod|tablet|mobile/i.test(
-      navigator.userAgent
+    return (
+      /android|iphone|ipad|ipod|tablet|mobile/i.test(navigator.userAgent) ||
+      (/macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1)
     );
   };
 
@@ -80,7 +81,10 @@ const CameraCapture = ({ onCapture }) => {
       const height = isPortrait ? 1280 : 720;
       let constraints;
 
-      if (cameraList && cameraList.length > 0 && cameraList[cameraIndex]?.deviceId) {
+      if (
+        Number.isInteger(cameraIndex) &&
+        cameraList?.[cameraIndex]?.deviceId
+      ) {
         constraints = {
           video: {
             deviceId: { exact: cameraList[cameraIndex].deviceId },
@@ -92,7 +96,9 @@ const CameraCapture = ({ onCapture }) => {
       } else {
         constraints = {
           video: {
-            facingMode: isMobileOrTablet() ? "environment" : "user",
+            facingMode: {
+              ideal: isMobileOrTablet() ? "environment" : "user",
+            },
             width: { ideal: width },
             height: { ideal: height },
           },
@@ -102,6 +108,13 @@ const CameraCapture = ({ onCapture }) => {
 
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
+      const activeDeviceId = stream.getVideoTracks()[0]?.getSettings().deviceId;
+      const activeCameraIndex = cameraList.findIndex(
+        (camera) => camera.deviceId === activeDeviceId
+      );
+      if (activeCameraIndex !== -1) {
+        setCurrentCamera(activeCameraIndex);
+      }
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -139,7 +152,7 @@ const CameraCapture = ({ onCapture }) => {
         const backIdx = deviceList.findIndex((d) =>
           /back|rear|environment/i.test(d.label)
         );
-        if (backIdx !== -1) preferred = backIdx;
+        preferred = backIdx === -1 ? null : backIdx;
       }
       setCurrentCamera(preferred);
       await startCamera(preferred, deviceList);

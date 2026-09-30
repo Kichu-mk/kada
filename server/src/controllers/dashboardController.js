@@ -22,7 +22,8 @@ const getDashboardSummary = async (req, res) => {
         const yearHistory = await History.countDocuments({ shop: shopId, date: { $gte: startOfYear } });
 
         // Notifications/Alerts (e.g., low stock)
-        const lowStockProducts = await Product.find({ shop: shopId, quantity: { $lt: 5 } });
+        const lowStockProducts = await Product.find({ shop: shopId, quantity: { $lt: 5, $gt: 0 } });
+        const outOfStockProducts = await Product.find({ shop: shopId, quantity: { $eq: 0 } });
 
         res.json({
             totalProducts,
@@ -31,10 +32,18 @@ const getDashboardSummary = async (req, res) => {
                 month: monthHistory,
                 year: yearHistory
             },
-            alerts: lowStockProducts.map(p => ({
-                id: p._id,
-                message: `Product ${p.name} is running low on stock (${p.quantity} left).`
-            }))
+            alerts: [
+                ...outOfStockProducts.map(p => ({
+                    id: p._id,
+                    stockStatus: 'out-of-stock',
+                    message: `Product ${p.name} is out of stock.`
+                })),
+                ...lowStockProducts.map(p => ({
+                    id: p._id,
+                    stockStatus: 'low',
+                    message: `Product ${p.name} is running low on stock (${p.quantity} left).`
+                })),               
+            ]
         });
     } catch (error) {
         console.error(error);
